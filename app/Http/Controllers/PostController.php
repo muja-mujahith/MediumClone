@@ -15,7 +15,7 @@ class PostController extends Controller
     {
         
         $posts = Post::orderBy('created_at', 'DESC')->simplePaginate(5);
-        return view('dashboard', compact('posts'));
+        return view('post.index', compact('posts'));
     }
 
     /**
@@ -24,6 +24,7 @@ class PostController extends Controller
     public function create()
     {
     
+        return view('post.create');
     }
 
     /**
@@ -31,7 +32,7 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        return view('post.store');
     }
 
     /**
