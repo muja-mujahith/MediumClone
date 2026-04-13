@@ -9,13 +9,13 @@ use Illuminate\View\Component;
 
 class CategoryTabs extends Component
 {
-    public $categories;
+    // public $categories;
     /**
      * Create a new component instance.
      */
     public function __construct()
     {
-        $this->categories = Category::all();
+        // $this->categories = Category::all();
     }
 
     /**
