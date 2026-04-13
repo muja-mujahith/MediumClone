@@ -18,7 +18,7 @@ class PostController extends Controller
         
         $posts = Post::orderBy('created_at', 'DESC')->paginate(6);
         // $categories = Category::get();
-        return view('dashboard', compact('posts'));
+        return view('post.index', compact('posts'));
     }
 
     /**
@@ -28,6 +28,7 @@ class PostController extends Controller
     {
         $categories = Category::get();
         return view('post.create', compact('categories'));
+        // return view('post.create');
     }
 
     /**

@@ -6,13 +6,9 @@
 
                     <!-- Tabs -->
                     <ul class="flex flex-wrap text-sm font-medium text-center justify-center">
-
-                      
-
-                      
-
-                        <x-category-tabs />
-
+                        <x-category-tabs>
+                            No Categories
+                        </x-category-tabs>
                     </ul>
 
                 </div>
@@ -22,9 +18,9 @@
                 <div class="p-6 text-gray-900 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                     @forelse($posts as $post)
-                        <x-post-item :post="$post"></x-post-item>
+                    <x-post-item :post="$post"></x-post-item>
                     @empty
-                        <div class="text-center text-red-50">No Post Found.</div>
+                    <div class="text-center text-red-50">No Post Found.</div>
                     @endforelse
 
                 </div>
