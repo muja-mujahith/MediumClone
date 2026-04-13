@@ -9,7 +9,7 @@
                 <div>
                     <x-input-label for="image" :value="__('Image')" />
 
-                    <!-- <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload file</label> -->
+                    <!-- <label class="block mb-2 text-sm font-medium text-gray-900" for="file_input">Upload file</label> -->
                     <x-text-input id="image" class="block mt-1 w-full" type="file" name="image" :value="old('image')" required autofocus />
 
                     <x-input-error :messages="$errors->get('image')" class="mt-2" />

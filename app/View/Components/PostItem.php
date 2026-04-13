@@ -2,20 +2,19 @@
 
 namespace App\View\Components;
 
-use App\Models\Category;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class CategoryTabs extends Component
+class PostItem extends Component
 {
-    public $categories;
+    public $post;
     /**
      * Create a new component instance.
      */
-    public function __construct()
+    public function __construct($post)
     {
-        $this->categories = Category::all();
+        $this->post = $post;
     }
 
     /**
@@ -23,7 +22,6 @@ class CategoryTabs extends Component
      */
     public function render(): View|Closure|string
     {
-        $categories = Category::get();
-        return view('components.category-tabs', compact('categories'));
+        return view('components.post-item');
     }
 }

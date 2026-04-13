@@ -16,8 +16,9 @@ class PostController extends Controller
     public function index()
     {
         
-        $posts = Post::orderBy('created_at', 'DESC')->simplePaginate(5);
-        return view('post.index', compact('posts'));
+        $posts = Post::orderBy('created_at', 'DESC')->paginate(6);
+        // $categories = Category::get();
+        return view('dashboard', compact('posts'));
     }
 
     /**
@@ -52,7 +53,13 @@ class PostController extends Controller
      */
     public function show(string $username, Post $post)
     {
-        return view('post.show', compact('post'));
+        $post = Post::where('slug', $post)
+        ->whereHas('user', function ($query) use ($username) {
+            $query->where('username', $username);
+        })
+        ->firstOrFail();
+
+    return view('post.show', compact('post'));
     }
 
     /**
