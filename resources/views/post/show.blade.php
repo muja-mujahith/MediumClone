@@ -9,7 +9,7 @@
 
                     <div>
                         <div class="flex gap-2">
-                            <a href="{{ route('profile.show', $post->user) }}" class="hover:underline">
+                            <a href="{{ route('profile.show', ['user' => $post->user->username, 'post' => $post->slug]) }}">
                                 {{ $post->user->name }}
                             </a>
                             &middot;
@@ -27,9 +27,9 @@
                 <!-- clap section -->
                 <x-clap-button />
                 <!-- end of clap section -->
-                
 
-                
+
+
                 <!-- content section -->
                 <div class="mt-8">
                     <img src="{{ $post->imageUrl() }}" alt="{{ $post->title }}" class="w-full" />
@@ -43,7 +43,7 @@
                     <span class="p-2 bg-gray-300 rounded-2xl">{{ $post->category->name }}</span>
                 </div>
 
-                
+
                 <!-- clap section -->
                 <x-clap-button />
                 <!-- end of clap section -->

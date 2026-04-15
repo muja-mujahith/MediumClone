@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Container\Attributes\Auth;
 
 class PostController extends Controller
 {
@@ -15,7 +16,7 @@ class PostController extends Controller
      */
     public function index()
     {
-        
+
         $posts = Post::orderBy('created_at', 'DESC')->paginate(6);
         // $categories = Category::get();
         return view('post.index', compact('posts'));
@@ -52,15 +53,28 @@ class PostController extends Controller
     /**~
      * Display the specified resource.
      */
-    public function show(string $username, Post $post)
-    {
-        $post = Post::where('slug', $post)
-        ->whereHas('user', function ($query) use ($username) {
-            $query->where('username', $username);
-        })
-        ->firstOrFail();
+    // public function show(string $username, Post $post)
+    // {
+    //     $post = Post::where('slug', $post)
+    //     ->whereHas('user', function ($query) use ($username) {
+    //         $query->where('username', $username);
+    //     })
+    //     ->firstOrFail();
 
-    return view('post.show', compact('post'));
+    // return view('post.show', compact('post'));
+    // }
+
+    public function show(string $username, string $post)
+    {
+        // $user = auth()->user();
+        // dd($user->following);
+        $post = Post::where('slug', $post)
+            ->whereHas('user', function ($query) use ($username) {
+                $query->where('username', $username);
+            })
+            ->firstOrFail();
+
+        return view('post.show', compact('post'));
     }
 
     /**
