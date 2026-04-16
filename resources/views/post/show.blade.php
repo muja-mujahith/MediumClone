@@ -8,13 +8,13 @@
                     <x-user-avatar :user="$post->user" />
 
                     <div>
-                        <div class="flex gap-2">
+                        <x-follower-ctr :user="$post->user" class="flex gap-2">
                             <a href="{{ route('profile.show', ['user' => $post->user->username, 'post' => $post->slug]) }}">
                                 {{ $post->user->name }}
                             </a>
                             &middot;
                             <a href="*" class="text-emerald-600">Follow</a>
-                        </div>
+                        </x-follower-ctr>
                         <div class="flex gap-2 text-sm text-gray-500">
                             {{ $post->readTime() }} min read
                             &middot;
