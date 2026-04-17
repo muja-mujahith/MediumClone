@@ -13,7 +13,8 @@
                                 {{ $post->user->name }}
                             </a>
                             &middot;
-                            <a href="*" class="text-emerald-600">Follow</a>
+                            <button href="*" class="text-emerald-600" x-text="following ? 'Unfollow' : 'Follow'"
+                            :class="following ? 'text-red-600' : 'text-emerald-600'" @click="follow()"></button>
                         </x-follower-ctr>
                         <div class="flex gap-2 text-sm text-gray-500">
                             {{ $post->readTime() }} min read
@@ -25,7 +26,7 @@
                 <!-- end of user avatar -->
 
                 <!-- clap section -->
-                <x-clap-button />
+                <x-clap-button :post="$post"/>
                 <!-- end of clap section -->
 
 
@@ -45,7 +46,7 @@
 
 
                 <!-- clap section -->
-                <x-clap-button />
+                <x-clap-button :post="$post" />
                 <!-- end of clap section -->
             </div>
         </div>
