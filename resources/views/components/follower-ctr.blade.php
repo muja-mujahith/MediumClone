@@ -1,6 +1,6 @@
 @props(['user'])
 
-<div {{ attributes() }} x-data="{
+<div {{ $attributes }} x-data="{
     following: {{ auth()->check() && $user->isFollowedBy(auth()->user()) ? 'true' : 'false' }},
     followersCount: {{ $user->followers()->count() }},
     follow() {
