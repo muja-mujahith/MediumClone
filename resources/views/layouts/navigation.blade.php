@@ -10,13 +10,27 @@
                     </a>
                 </div>
 
+                
+
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
+                        {{ __('Home') }}
                     </x-nav-link>
+
+                    @auth
+                    <x-nav-link :href="route('post.following')" :active="request()->routeIs('post.following')">
+                        {{ __('Following') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('post.mypost')" :active="request()->routeIs('post.mypost')">
+                        {{ __('My Posts') }}
+                    </x-nav-link>
+                    @endauth
                 </div>
             </div>
+
+            
 
             <div class="flex">
                 <a href="{{ route('post.create') }}" class="flex items-center">

@@ -9,12 +9,16 @@
 
                     <div>
                         <x-follower-ctr :user="$post->user" class="flex gap-2">
-                            <a href="{{ route('profile.show', ['user' => $post->user->username, 'post' => $post->slug]) }}">
+                            <a href="{{ route('profile.show', ['user' => $post->user->username]) }}">
                                 {{ $post->user->name }}
                             </a>
+                            @auth
+                            @if(auth()->id() !== $post->user->id)
                             &middot;
                             <button href="*" class="text-emerald-600" x-text="following ? 'Unfollow' : 'Follow'"
-                            :class="following ? 'text-red-600' : 'text-emerald-600'" @click="follow()"></button>
+                                :class="following ? 'text-red-600' : 'text-emerald-600'" @click="follow()"></button>
+                            @endif
+                            @endauth
                         </x-follower-ctr>
                         <div class="flex gap-2 text-sm text-gray-500">
                             {{ $post->readTime() }} min read
@@ -26,7 +30,7 @@
                 <!-- end of user avatar -->
 
                 <!-- clap section -->
-                <x-clap-button :post="$post"/>
+                <!-- <x-clap-button :post="$post"/> -->
                 <!-- end of clap section -->
 
 
@@ -45,9 +49,11 @@
                 </div>
 
 
+                @auth
                 <!-- clap section -->
                 <x-clap-button :post="$post" />
                 <!-- end of clap section -->
+                @endauth
             </div>
         </div>
     </div>

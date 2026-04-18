@@ -1,17 +1,25 @@
-<ul class="flex flex-wrap text-sm font-medium text-center text-gray-500 justify-center">
+
+
+<ul class="flex flex-wrap text-sm font-medium text-center justify-center">
     <li class="me-2">
-        <a href="#" class="inline-block px-4 py-2 text-white bg-blue-600 rounded-lg active" aria-current="page">All</a>
+        <a href="/" 
+           class="{{ !request()->route('category')
+                ? 'inline-block px-4 py-2 text-white bg-green-600 rounded-lg' 
+                : 'inline-block px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200' }}">
+            All
+        </a>
     </li>
+
     @forelse ($categories as $category)
         <li class="me-2">
-            <a href="{{ route('post.category', $category) }}" 
-            class= "{{ Route::currentRouteNamed('post.category') && request('category') == $category->id }}" ? 
-            'inline-block px-4 py-2 text-white bg-blue-600 rounded-lg active' : 'inline-block px-4 py-2 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white'
-            >{{ $category->name }}</a>
-        </li>   
+            <a href="{{ route('post.category',  $category) }}" 
+               class="{{ request()->route('category') && request()->route('category')->id == $category->id
+                    ? 'inline-block px-4 py-2 text-white bg-green-600 rounded-lg' 
+                    : 'inline-block px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200' }}">
+                {{ $category->name }}
+            </a>
+        </li>
     @empty
-        {{ $slot }}
+        <li>No categories found.</li>
     @endforelse
-
-
 </ul>
