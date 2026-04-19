@@ -8,18 +8,60 @@
                     <x-application-logo class="block h-8 w-auto fill-current text-gray-800" />
                 </a>
 
-                {{-- Desktop Nav Links --}}
-                <div class="hidden sm:flex items-center gap-1 ml-4">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                {{-- Left: Nav Links --}}
+                <div class="flex items-center gap-1">
+
+                    <a href="{{ route('dashboard') }}"
+                        class="group relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13.5px] font-medium transition-all duration-150
+              {{ request()->routeIs('dashboard')
+                  ? 'text-black bg-white dark:text-black dark:bg-gray-200 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                        <svg class="w-[15px] h-[15px] transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                            <polyline stroke-linecap="round" stroke-linejoin="round" points="9 22 9 12 15 12 15 22" />
+                        </svg>
                         {{ config('app.name') }}
-                    </x-nav-link>
+                        <span class="absolute bottom-[3px] left-3.5 right-3.5 h-[2px] rounded-full bg-gray-900 dark:bg-white transition-all duration-200 origin-center
+                     {{ request()->routeIs('dashboard') ? 'scale-x-100 opacity-50' : 'scale-x-0 opacity-0 group-hover:scale-x-50 group-hover:opacity-25' }}">
+                        </span>
+                    </a>
+
+                    <div class="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1"></div>
+
                     @auth
-                    <x-nav-link :href="route('post.following')" :active="request()->routeIs('post.following')">
+                    <a href="{{ route('post.following') }}"
+                        class="group relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13.5px] font-medium transition-all duration-150
+              {{ request()->routeIs('post.following')
+                  ? 'text-black bg-white dark:text-black dark:bg-gray-200 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                        <svg class="w-[15px] h-[15px] transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                        </svg>
                         {{ __('Following') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('post.mypost')" :active="request()->routeIs('post.mypost')">
+                        <!-- <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-blue-500 text-white text-[11px] font-medium rounded-full transition-transform duration-200 group-hover:scale-110">
+                            {{ $followingCount ?? 0 }}
+                        </span> -->
+                        <span class="absolute bottom-[3px] left-3.5 right-3.5 h-[2px] rounded-full bg-gray-900 dark:bg-white transition-all duration-200 origin-center
+                     {{ request()->routeIs('post.following') ? 'scale-x-100 opacity-50' : 'scale-x-0 opacity-0 group-hover:scale-x-50 group-hover:opacity-25' }}">
+                        </span>
+                    </a>
+
+                    <a href="{{ route('post.mypost') }}"
+                        class="group relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13.5px] font-medium transition-all duration-150
+              {{ request()->routeIs('post.mypost')
+                  ? 'text-black bg-white dark:text-black dark:bg-gray-200 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                        <svg class="w-[15px] h-[15px] transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
                         {{ __('My Posts') }}
-                    </x-nav-link>
+                        <span class="absolute bottom-[3px] left-3.5 right-3.5 h-[2px] rounded-full bg-gray-900 dark:bg-white transition-all duration-200 origin-center
+                     {{ request()->routeIs('post.mypost') ? 'scale-x-100 opacity-50' : 'scale-x-0 opacity-0 group-hover:scale-x-50 group-hover:opacity-25' }}">
+                        </span>
+                    </a>
                     @endauth
                 </div>
             </div>
