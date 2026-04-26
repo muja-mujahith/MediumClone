@@ -1,0 +1,53 @@
+stages:
+  - test
+  - build
+  - push
+
+variables:
+  IMAGE_NAME: logfile-app
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+test:
+  stage: test
+  image: php:8.2
+  services:
+    - mysql:8.0
+  variables:
+    MYSQL_DATABASE: laravel_test
+    MYSQL_ROOT_PASSWORD: root
+    DB_HOST: mysql
+    DB_DATABASE: laravel_test
+    DB_USERNAME: root
+    DB_PASSWORD: root
+  before_script:
+    - apt-get update -y
+    - apt-get install -y git unzip curl zip libpng-dev libonig-dev libxml2-dev nodejs npm
+    - docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+    - curl -sS https://getcomposer.org/installer | php
+    - mv composer.phar /usr/local/bin/composer
+    - composer install --no-interaction --prefer-dist
+    - cp .env.example .env
+    - php artisan key:generate
+  script:
+    - php artisan migrate --force
+    - php artisan test
+
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker build -t $IMAGE_NAME .
+
+push:
+  stage: push
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
+  script:
+    - docker tag $IMAGE_NAME $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
+    - docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
