@@ -1,40 +1,44 @@
-# Use PHP with Apache
+# PHP + Apache base image
 FROM php:8.2-apache
 
-# Install system dependencies
+# System dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip
+    git unzip curl zip \
+    libpng-dev libonig-dev libxml2-dev
 
-# Install PHP extensions
+# PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 
 # Enable Apache rewrite
 RUN a2enmod rewrite
 
-# Set working directory
+# Set Laravel public folder
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
+    /etc/apache2/sites-available/000-default.conf
+
+# Install Node.js (FIX FOR YOUR npm ERROR)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+# Working directory
 WORKDIR /var/www/html
 
-# Copy project files
+# Copy project
 COPY . /var/www/html
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
-
-# Install Composer
+# Composer install
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-interaction --optimize-autoloader
 
-# Install Laravel dependencies
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# Node build
+RUN npm install
+RUN npm run build
 
-# Expose port
+# Permissions
+RUN chown -R www-data:www-data /var/www/html
+
 EXPOSE 80
 
-# Start Apache
 CMD ["apache2-foreground"]

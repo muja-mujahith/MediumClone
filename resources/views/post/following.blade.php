@@ -4,7 +4,8 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-4 text-gray-900">
-                    <x-category-tabs />
+                    <!-- <x-category-tabs /> -->
+                     <x-category-tabs context="following" :categories="$categories" />
                 </div>
             </div>
 
