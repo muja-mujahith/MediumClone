@@ -11,12 +11,30 @@ use Illuminate\Support\Str;
 class PostController extends Controller
 {
     // Home page — all posts for everyone
-    public function index()
+    // public function index()
+    // {
+    //     $categories = Category::all();
+
+    //     $posts = Post::with(['user', 'category'])
+    //         ->withCount('claps')
+    //         ->latest()
+    //         ->paginate(10);
+
+    //     return view('post.index', compact('posts', 'categories'));
+    // }
+
+    // ALL POSTS
+    public function index(Request $request)
     {
         $categories = Category::all();
 
         $posts = Post::with(['user', 'category'])
             ->withCount('claps')
+            ->when($request->category, function ($query) use ($request) {
+                $query->whereHas('category', function ($q) use ($request) {
+                    $q->where('slug', $request->category);
+                });
+            })
             ->latest()
             ->paginate(10);
 
@@ -24,7 +42,22 @@ class PostController extends Controller
     }
 
     // Following page — only posts from followed users
-    public function following()
+    // public function following()
+    // {
+    //     $categories = Category::all();
+
+    //     $followingIds = auth()->user()->following()->pluck('users.id');
+
+    //     $posts = Post::whereIn('user_id', $followingIds)
+    //         ->with(['user', 'category'])
+    //         ->withCount('claps')
+    //         ->latest()
+    //         ->paginate(10);
+
+    //     return view('post.following', compact('posts', 'categories'));
+    // }
+    // FOLLOWING POSTS
+    public function following(Request $request)
     {
         $categories = Category::all();
 
@@ -33,6 +66,11 @@ class PostController extends Controller
         $posts = Post::whereIn('user_id', $followingIds)
             ->with(['user', 'category'])
             ->withCount('claps')
+            ->when($request->category, function ($query) use ($request) {
+                $query->whereHas('category', function ($q) use ($request) {
+                    $q->where('slug', $request->category);
+                });
+            })
             ->latest()
             ->paginate(10);
 
@@ -40,29 +78,46 @@ class PostController extends Controller
     }
 
     // Category — all posts in category
-    public function byCategory(Category $category)
+    // public function byCategory(Category $category)
+    // {
+    //     $categories = Category::all();
+
+    //     $posts = Post::where('category_id', $category->id)
+    //         ->with(['user', 'category'])
+    //         ->withCount('claps')
+    //         ->latest()
+    //         ->paginate(10);
+
+    //     return view('post.index', compact('posts', 'categories', 'category'));
+    // }
+
+    // My Posts
+    // public function myPost()
+    // {
+    //     $posts = Post::where('user_id', auth()->id())
+    //         // ->with(['user', 'category'])  // ← 'user' is required for $post->user->username
+    //         ->latest()
+    //         ->paginate(10);
+
+    //     return view('post.myposts', compact('posts'));
+    // }
+
+     public function myPost(Request $request)
     {
         $categories = Category::all();
 
-        $posts = Post::where('category_id', $category->id)
+        $posts = Post::where('user_id', auth()->id())
             ->with(['user', 'category'])
-            ->withCount('claps')
+            ->when($request->category, function ($query) use ($request) {
+                $query->whereHas('category', function ($q) use ($request) {
+                    $q->where('slug', $request->category);
+                });
+            })
             ->latest()
             ->paginate(10);
 
-        return view('post.index', compact('posts', 'categories', 'category'));
+        return view('post.myposts', compact('posts', 'categories'));
     }
-
-    // My Posts
-   public function myPost()
-{
-    $posts = Post::where('user_id', auth()->id())
-        ->with(['user', 'category'])  // ← 'user' is required for $post->user->username
-        ->latest()
-        ->paginate(10);
-
-    return view('post.myposts', compact('posts'));
-}
 
     // Create post form
     public function create()
@@ -71,7 +126,6 @@ class PostController extends Controller
         return view('post.create', compact('categories'));
     }
 
-    // Store new post
     public function store(PostCreateRequest $request)
     {
         $data = $request->validated();
@@ -81,11 +135,24 @@ class PostController extends Controller
 
         $data['user_id'] = auth()->id();
         $data['image']   = $image->store('posts', 'public');
-        $data['slug']    = Str::slug($data['title']);
+        $data['slug']    = $this->generateUniqueSlug($data['title']);
 
         Post::create($data);
 
         return redirect()->route('post.mypost')->with('success', 'Post created successfully.');
+    }
+
+    private function generateUniqueSlug(string $title): string
+    {
+        $slug = Str::slug($title);
+        $original = $slug;
+        $count = 1;
+
+        while (Post::where('slug', $slug)->exists()) {
+            $slug = $original . '-' . $count++;
+        }
+
+        return $slug;
     }
 
     // Show single post
@@ -166,14 +233,38 @@ class PostController extends Controller
     }
 
     // Category page (public - no follow filter)
-    public function category(Category $category)
-    {
-        $posts = $category->posts()
-            ->with(['user', 'media'])
-            ->withCount('claps')
-            ->latest()
-            ->simplePaginate(5);
+    // public function category(Category $category)
+    // {
+    //     $posts = $category->posts()
+    //         ->with(['user', 'media'])
+    //         ->withCount('claps')
+    //         ->latest()
+    //         ->simplePaginate(5);
 
-        return view('post.index', compact('posts'));
+    //     return view('post.index', compact('posts'));
+    // }
+    public function category(Request $request, Category $category)
+    {
+        $categories = Category::all();
+        $context = $request->query('context', 'all');
+
+        // base query
+        $query = Post::where('category_id', $category->id)
+            ->with(['user', 'category'])
+            ->withCount('claps');
+
+        // 🔥 apply context filter
+        if ($context === 'following') {
+            $followingIds = auth()->user()->following()->pluck('users.id');
+            $query->whereIn('user_id', $followingIds);
+        }
+
+        if ($context === 'mine') {
+            $query->where('user_id', auth()->id());
+        }
+
+        $posts = $query->latest()->paginate(10);
+
+        return view('post.index', compact('posts', 'categories', 'category', 'context'));
     }
 }

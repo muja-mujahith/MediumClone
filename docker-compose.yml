@@ -3,7 +3,8 @@ version: "3.8"
 services:
   app:
     build: .
-    container_name: LogFile
+    image: logfile:1.0
+    container_name: logfile
     ports:
       - "8000:80"
     volumes:
@@ -13,7 +14,7 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: LogFile
+    container_name: logfile_db
     restart: always
     environment:
       MYSQL_DATABASE: LogFile
@@ -22,6 +23,19 @@ services:
       - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: logfile_phpmyadmin
+    restart: always
+    depends_on:
+      - mysql
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
 
 volumes:
   db_data:
