@@ -8,9 +8,9 @@ variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
 
-
-#  TEST STAGE (Laravel + MySQL)
-
+# =========================
+# 🧪 TEST STAGE (Laravel + MySQL + NPM)
+# =========================
 test:
   stage: test
   image: php:8.2
@@ -36,26 +36,31 @@ test:
 
     - docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 
+    # Composer
     - curl -sS https://getcomposer.org/installer | php
     - mv composer.phar /usr/local/bin/composer
 
     - composer install --no-interaction --prefer-dist
 
+    # ENV setup
     - cp .env.example .env
     - php artisan key:generate
 
+    # NPM (FIX FOR VITE ERROR)
+    - npm install
+    - npm run build
+
     - php artisan config:clear
     - php artisan cache:clear
-
-    - sleep 10
 
   script:
     - php artisan migrate --force
     - php artisan test
 
 
-# BUILD DOCKER IMAGE
-
+# =========================
+# 🐳 BUILD DOCKER IMAGE
+# =========================
 build:
   stage: build
   image: docker:24
@@ -66,8 +71,9 @@ build:
     - docker build -t $IMAGE_NAME .
 
 
-# PUSH TO DOCKER HUB
-
+# =========================
+# 🚀 PUSH TO DOCKER HUB
+# =========================
 push:
   stage: push
   image: docker:24
