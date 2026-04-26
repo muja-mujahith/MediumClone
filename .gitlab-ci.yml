@@ -8,46 +8,75 @@ variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
 
+
+#  TEST STAGE (Laravel + MySQL)
+
 test:
   stage: test
   image: php:8.2
+
   services:
-    - mysql:8.0
+    - name: mysql:8.0
+      alias: mysql
+
   variables:
     MYSQL_DATABASE: laravel_test
     MYSQL_ROOT_PASSWORD: root
+
+    DB_CONNECTION: mysql
     DB_HOST: mysql
+    DB_PORT: 3306
     DB_DATABASE: laravel_test
     DB_USERNAME: root
     DB_PASSWORD: root
+
   before_script:
     - apt-get update -y
     - apt-get install -y git unzip curl zip libpng-dev libonig-dev libxml2-dev nodejs npm
+
     - docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+
     - curl -sS https://getcomposer.org/installer | php
     - mv composer.phar /usr/local/bin/composer
+
     - composer install --no-interaction --prefer-dist
+
     - cp .env.example .env
     - php artisan key:generate
+
+    - php artisan config:clear
+    - php artisan cache:clear
+
+    - sleep 10
+
   script:
     - php artisan migrate --force
     - php artisan test
+
+
+# BUILD DOCKER IMAGE
 
 build:
   stage: build
   image: docker:24
   services:
     - docker:24-dind
+
   script:
     - docker build -t $IMAGE_NAME .
+
+
+# PUSH TO DOCKER HUB
 
 push:
   stage: push
   image: docker:24
   services:
     - docker:24-dind
+
   before_script:
     - docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
+
   script:
     - docker tag $IMAGE_NAME $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
     - docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
