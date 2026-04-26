@@ -102,7 +102,7 @@ class PostController extends Controller
     //     return view('post.myposts', compact('posts'));
     // }
 
-     public function myPost(Request $request)
+    public function myPost(Request $request)
     {
         $categories = Category::all();
 
