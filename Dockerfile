@@ -12,6 +12,9 @@ RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 # Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
 
+# Disable mpm_event and enable mpm_prefork (required for PHP)
+RUN a2dismod mpm_event && a2enmod mpm_prefork
+
 # Install Node.js 20.x
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
