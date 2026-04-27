@@ -59,6 +59,9 @@ WORKDIR /var/www/html
 # Copy project files
 COPY . .
 
+# Create required Laravel storage directories
+RUN mkdir -p storage/framework/cache/data storage/logs bootstrap/cache
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -71,6 +74,7 @@ RUN npm run build
 
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html
+RUN chmod -R 775 storage bootstrap/cache
 
 # Expose port for Railway
 EXPOSE 80
