@@ -1,22 +1,24 @@
 # PHP + Apache base image
 FROM php:8.2-apache
 
-# System dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git unzip curl zip \
     libpng-dev libonig-dev libxml2-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# PHP extensions
+# Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 
-# Enable Apache modules
+# Enable Apache rewrite
 RUN a2enmod rewrite
 
-# ✅ FIX: Ensure only one MPM is loaded
-RUN a2dismod mpm_event && a2enmod mpm_prefork
+# 🔥 HARD FIX: Remove ALL MPMs and enable only prefork
+RUN rm -f /etc/apache2/mods-enabled/mpm_*.load \
+    && rm -f /etc/apache2/mods-enabled/mpm_*.conf \
+    && a2enmod mpm_prefork
 
-# Install Node.js (for Vite build)
+# Install Node.js (for frontend build)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
@@ -26,16 +28,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy project files
+# Copy project
 COPY . .
 
 # Install PHP dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Install frontend dependencies and build assets
+# Install and build frontend
 RUN npm install && npm run build
 
-# Set Laravel permissions
+# Set correct permissions
 RUN mkdir -p storage/framework/cache/data \
     storage/framework/sessions \
     storage/framework/views \
@@ -44,7 +46,7 @@ RUN mkdir -p storage/framework/cache/data \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Set Apache document root to Laravel public/
+# Set Apache document root to public/
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
@@ -52,7 +54,7 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Laravel cache (safe version)
+# Clear Laravel caches safely
 RUN php artisan config:clear || true && \
     php artisan route:clear || true && \
     php artisan view:clear || true
