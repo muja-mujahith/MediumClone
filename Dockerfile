@@ -1,4 +1,4 @@
-# PHP + Apache base image
+# Use PHP with Apache
 FROM php:8.2-apache
 
 # Install system dependencies
@@ -13,12 +13,13 @@ RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 # Enable Apache rewrite
 RUN a2enmod rewrite
 
-# 🔥 HARD FIX: Remove ALL MPMs and enable only prefork
-RUN rm -f /etc/apache2/mods-enabled/mpm_*.load \
-    && rm -f /etc/apache2/mods-enabled/mpm_*.conf \
+# 🔥 FIX: Clean MPM setup (ONLY prefork)
+RUN a2dismod mpm_event || true \
+    && a2dismod mpm_worker || true \
+    && a2dismod mpm_prefork || true \
     && a2enmod mpm_prefork
 
-# Install Node.js (for frontend build)
+# Install Node.js (for Vite build)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
@@ -28,16 +29,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy project
+# Copy project files
 COPY . .
 
 # Install PHP dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Install and build frontend
+# Install frontend and build
 RUN npm install && npm run build
 
-# Set correct permissions
+# Set Laravel permissions
 RUN mkdir -p storage/framework/cache/data \
     storage/framework/sessions \
     storage/framework/views \
@@ -46,7 +47,7 @@ RUN mkdir -p storage/framework/cache/data \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Set Apache document root to public/
+# Set Apache to use Laravel public folder
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
