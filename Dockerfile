@@ -1,8 +1,9 @@
-# PHP + Apache base image
-FROM php:8.2-apache
+# Nginx + PHP-FPM base image
+FROM php:8.2-fpm
 
-# Install system dependencies
+# Install system dependencies and Nginx
 RUN apt-get update && apt-get install -y \
+    nginx \
     git unzip curl zip \
     libpng-dev libonig-dev libxml2-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -10,57 +11,52 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 
-# Enable Apache rewrite
-RUN a2enmod rewrite
-
-# 🔥 HARD FIX: Remove ALL MPMs and enable only prefork
-RUN rm -f /etc/apache2/mods-enabled/mpm_*.load \
-    && rm -f /etc/apache2/mods-enabled/mpm_*.conf \
-    && a2enmod mpm_prefork
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Install Node.js (for frontend build)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
-
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+    && apt-get install -y nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy project
+# Copy project files
 COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-interaction --optimize-autoloader --no-dev
-
-# Install and build frontend
-RUN npm install && npm run build
-
-# Set correct permissions
+# Create required Laravel directories and set permissions
 RUN mkdir -p storage/framework/cache/data \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
     bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+    && chmod -R 777 storage/framework/cache/data \
+        storage/logs \
+        bootstrap/cache
 
-# Set Apache document root to public/
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+# Install PHP dependencies
+RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-    /etc/apache2/sites-available/000-default.conf \
-    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' \
-    /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Install npm dependencies and build assets
+RUN npm install && npm run build
 
-# Clear Laravel caches safely
-RUN php artisan config:clear || true && \
-    php artisan route:clear || true && \
-    php artisan view:clear || true
+# Cache Laravel config and routes
+RUN php artisan config:cache || true && \
+    php artisan route:cache || true
+
+# Copy Nginx vhost config
+COPY docker/nginx/default.conf /etc/nginx/sites-available/default
+
+# Set ownership to www-data
+RUN chown -R www-data:www-data /var/www/html
+
+# Copy startup script
+COPY docker/start.sh /start.sh
+RUN chmod +x /start.sh
 
 # Expose port
 EXPOSE 80
 
-# Start Apache
-CMD ["apache2-foreground"]
+# Start PHP-FPM and Nginx
+CMD ["/start.sh"]
