@@ -1,16 +1,13 @@
 stages:
   - test
-  - build
-  - push
+  - build-and-push
 
 variables:
   IMAGE_NAME: logfile-app
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
 
-# =========================
-# 🧪 TEST STAGE (Laravel + MySQL + NPM)
-# =========================
+# TEST STAGE
 test:
   stage: test
   image: php:8.2
@@ -46,7 +43,7 @@ test:
     - cp .env.example .env
     - php artisan key:generate
 
-    # NPM (FIX FOR VITE ERROR)
+    # NPM build
     - npm install
     - npm run build
 
@@ -57,25 +54,9 @@ test:
     - php artisan migrate --force
     - php artisan test
 
-
-# =========================
-# 🐳 BUILD DOCKER IMAGE
-# =========================
-build:
-  stage: build
-  image: docker:24
-  services:
-    - docker:24-dind
-
-  script:
-    - docker build -t $IMAGE_NAME .
-
-
-# =========================
-# 🚀 PUSH TO DOCKER HUB
-# =========================
-push:
-  stage: push
+# BUILD & PUSH STAGE
+build-and-push:
+  stage: build-and-push
   image: docker:24
   services:
     - docker:24-dind
@@ -84,5 +65,8 @@ push:
     - docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
 
   script:
-    - docker tag $IMAGE_NAME $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
+    - docker build -t $DOCKERHUB_USERNAME/$IMAGE_NAME:latest .
     - docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
+
+  only:
+    - main
