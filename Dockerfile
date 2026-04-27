@@ -1,83 +1,56 @@
-# # PHP + Apache base image
-# FROM php:8.2-apache
+# PHP + Apache base image
+FROM php:8.2-apache
 
-# # System dependencies
-# RUN apt-get update && apt-get install -y \
-#     git unzip curl zip \
-#     libpng-dev libonig-dev libxml2-dev
-
-# # PHP extensions
-# RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
-
-# # Enable Apache rewrite
-# RUN a2enmod rewrite
-
-# # Set Laravel public folder
-# ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-
-# RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-#     /etc/apache2/sites-available/000-default.conf
-
-# # Install Node.js (FIX FOR YOUR npm ERROR)
-# RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-#     && apt-get install -y nodejs
-
-# # Working directory
-# WORKDIR /var/www/html
-
-# # Copy project
-# COPY . /var/www/html
-
-# # Composer install
-# COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-# RUN composer install --no-interaction --optimize-autoloader
-
-# # Node build
-# RUN npm install
-# RUN npm run build
-
-# # Permissions
-# RUN chown -R www-data:www-data /var/www/html
-
-# EXPOSE 80
-
-# CMD ["apache2-foreground"]
-
-# Use lightweight PHP CLI (no Apache issues)
-FROM php:8.2-cli
-
-# Install system dependencies
+# System dependencies
 RUN apt-get update && apt-get install -y \
-    git unzip curl zip libpng-dev libonig-dev libxml2-dev nodejs npm
+    git unzip curl zip \
+    libpng-dev libonig-dev libxml2-dev
 
-# Install PHP extensions
+# PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+
+# Enable Apache mod_rewrite for Laravel routing
+RUN a2enmod rewrite
+
+# Install Node.js 20.x
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
 
 # Copy project files
-COPY . .
+COPY . /var/www/html
 
-# Create required Laravel storage directories
-RUN mkdir -p storage/framework/cache/data storage/logs bootstrap/cache
-
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Create required Laravel storage directories and set permissions
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions \
+    storage/framework/views storage/logs bootstrap/cache \
+    && chmod -R 777 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 # Install PHP dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Install frontend dependencies and build
+# Install frontend dependencies and build assets
 RUN npm install
 RUN npm run build
 
-# Set correct permissions
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 775 storage bootstrap/cache
+# Cache Laravel config and routes for production
+RUN php artisan config:cache && php artisan route:cache
 
-# Expose port for Railway
+# Set ownership of the full app to www-data
+RUN chown -R www-data:www-data /var/www/html
+
+# Configure Apache to serve from Laravel's public/ directory
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
+    /etc/apache2/sites-available/000-default.conf \
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' \
+    /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
 EXPOSE 80
 
-# Start Laravel server
-CMD php artisan serve --host=0.0.0.0 --port=80
+CMD ["apache2-foreground"]
