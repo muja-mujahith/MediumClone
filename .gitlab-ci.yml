@@ -37,7 +37,7 @@ test:
     - curl -sS https://getcomposer.org/installer | php
     - mv composer.phar /usr/local/bin/composer
 
-    - composer install --no-interaction --prefer-dist
+    - composer install --no-interaction --prefer-dist  --optimize-autoloader
 
     # ENV setup
     - cp .env.example .env
