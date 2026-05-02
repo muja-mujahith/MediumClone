@@ -16,15 +16,17 @@ WORKDIR /var/www/html
 COPY . .
 
 RUN composer install --no-interaction --optimize-autoloader --no-dev
+
 ENV NODE_ENV=production
 RUN npm install --include=dev
 RUN npm run build
+
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions \
     storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# PHP-FPM config
+# PHP-FPM config (uses Unix socket)
 COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Nginx config
