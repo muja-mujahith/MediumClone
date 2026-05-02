@@ -17,8 +17,8 @@ COPY . .
 
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 ENV NODE_ENV=production
-RUN npm install && npm run build
-
+RUN npm install --include=dev
+RUN npm run build
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions \
     storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
