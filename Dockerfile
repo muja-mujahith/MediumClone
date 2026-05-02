@@ -23,6 +23,9 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+# PHP-FPM config
+COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+
 # Nginx config
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 
