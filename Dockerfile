@@ -16,6 +16,7 @@ WORKDIR /var/www/html
 COPY . .
 
 RUN composer install --no-interaction --optimize-autoloader --no-dev
+ENV NODE_ENV=production
 RUN npm install && npm run build
 
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions \

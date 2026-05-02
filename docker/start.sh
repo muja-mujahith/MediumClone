@@ -1,11 +1,15 @@
 #!/bin/sh
 set -e
 
-# Run Laravel migrations before starting services
+# Clear Laravel cache (VERY IMPORTANT)
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
+php artisan route:clear
+
+# Run migrations
 php artisan migrate --force
 
-# Start PHP-FPM in the background with -D flag
+# Start services
 php-fpm -D
-
-# Start Nginx in the foreground
 nginx -g "daemon off;"
