@@ -26,5 +26,9 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions \
 # Nginx config
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 
+# Entrypoint
+COPY docker/start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 80
-CMD service php8.2-fpm start && nginx -g 'daemon off;'
+CMD ["/start.sh"]
